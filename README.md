@@ -1,4 +1,4 @@
-# GODOT-Basic-Loading-Screen-Utility
+# Godot-Basic-Loading-Screen-Utility
 
 This utility consists of a scene with progress bar and an image animation and a script that manages scene preloading and shader precompilation.
 
