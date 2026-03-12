@@ -1,0 +1,46 @@
+[gd_scene load_steps=2 format=3 uid="uid://bgwdd0eg8xexg"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_e7efo"]
+font_size = 37
+
+[node name="HUD" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Label" type="Label" parent="."]
+layout_mode = 0
+offset_left = 86.0
+offset_top = 179.0
+offset_right = 284.0
+offset_bottom = 230.0
+text = "LOADING : "
+label_settings = SubResource("LabelSettings_e7efo")
+
+[node name="ProgressBar1" type="ProgressBar" parent="."]
+layout_mode = 0
+offset_left = 85.0
+offset_top = 266.0
+offset_right = 1097.0
+offset_bottom = 307.0
+
+[node name="ProgressBar2" type="ProgressBar" parent="."]
+layout_mode = 0
+offset_left = 86.0
+offset_top = 342.0
+offset_right = 1098.0
+offset_bottom = 383.0
+
+[node name="Label2" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 0.035
+anchor_bottom = 0.035
+offset_left = 319.0
+offset_top = 195.0
+offset_right = 386.68
+offset_bottom = 195.32
+horizontal_alignment = 1
