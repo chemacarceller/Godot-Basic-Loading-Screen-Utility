@@ -28,6 +28,8 @@ A detailed explanation of how the demo works is available on the itch.io page in
 
 Feel free to check it out in either of its two versions, Windows or Linux.
 
+The code for this demo is available at : [Third Person Character Demo](https://github.com/chemacarceller/Godot-Third-Person-Character-Demo) 
+
 ====================================================================================
 
 Esta utilidad consta de una escena con barra de progreso, una animación de imagen y un script que gestiona la precarga de la escena y la precompilación del shader.
@@ -54,4 +56,8 @@ Esta es una demo en desarrollo continuo para probar todos los componentes desarr
 
 También añade la posibilidad de cambiar personajes y ver el consumo de recursos mediante un plugin.
 
-Puedes encontrar una explicación detallada del funcionamiento de la demo en la página de itch.io indicada. No dudes en probarlo en cualquiera de sus dos versiones: Windows o Linux.
+Puedes encontrar una explicación detallada del funcionamiento de la demo en la página de itch.io indicada. 
+
+No dudes en probarlo en cualquiera de sus dos versiones: Windows o Linux.
+
+El código de esta demo lo tienes disponible en : [Third Person Character Demo](https://github.com/chemacarceller/Godot-Third-Person-Character-Demo)
