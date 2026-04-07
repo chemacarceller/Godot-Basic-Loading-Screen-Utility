@@ -9,15 +9,10 @@ var _temp_compiler_meshes: Array[MeshInstance3D] = []
 ## Stores the scene to be loaded once the preload and precompile process has finished
 @onready var _scene_path : String = "res://main/levels/mainlevel.tscn"
 
-# Stores the PackedScene to be loaded at the end of the process
-var _loading_scene : PackedScene = null
-# Node the PackedScene to be loaded at the end of the process
-var _loading_scene_node : Node = null
-
 
 # All scenes to be loaded one after the other, can be empty (scenes = prefabs)
 ## All scenes to be loaded one after the other, can be empty (scenes = prefabs)
-@onready var _scene_paths : Array[String] = ["res://main/levels/mainlevel.tscn", "res://main/levels/secondlevel.tscn", "res://main/prefabs/weapons/assault_rifle/assault_rifle.tscn","res://main/prefabs/bullets/projectile/projectile.tscn"]
+@onready var _scene_paths : Array[String] = ["res://main/prefabs/weapons/assault_rifle/assault_rifle.tscn","res://main/prefabs/bullets/projectile/projectile.tscn"]
 var _scene_paths_element : String = ""
 # Meshes of the previous prefabs to be located in memory, the key is the name of the prefab
 @onready var _meshes : Dictionary = {
@@ -92,7 +87,7 @@ func _ready() -> void:
 	else : 
 		# Loading the first scene
 		_scene_index = 0
-		label2.text = "Loading Prefabs... " + _scene_paths[_scene_index].split("/")[_scene_paths[_scene_index].split("/").size() - 1].split(".")[0]
+		label2.text = "Loading Prefabs... " + _scene_paths[_scene_index].get_file().get_basename()
 
 		# Begin the scenes preloading process
 		_scenesBeingLoaded = true
@@ -149,7 +144,7 @@ func _launch_loading() :
 		progress_bar1.value=0.0
 
 		# Loading the next scene in memory
-		label2.text = "Loading Prefabs... " + _scene_paths[_scene_index].split("/")[_scene_paths[_scene_index].split("/").size() - 1].split(".")[0]
+		label2.text = "Loading Prefabs... " + _scene_paths[_scene_index].get_file().get_basename()
 		_load_scene(_scene_paths[_scene_index])
 
 	else :
@@ -157,8 +152,6 @@ func _launch_loading() :
 		# Also used to execute some code only once, that is preparing the level to be loaded and reseting the progress bar 1
 		if _scenesBeingLoaded :
 			_scenesBeingLoaded = false
-			_loading_scene = ResourceLoader.load(_scene_path) as PackedScene
-			_loading_scene_node = _loading_scene.instantiate()
 
 			_progress1_value = 0.0
 			progress_bar1.value=0.0
@@ -175,7 +168,7 @@ func _launch_loading() :
 
 		# If we had scenes to load the new level is loaded when progress 2 bar arrives to 100
 		# If we dont have scenes to load the new level is loaded when progress 1 bar arrives to 100
-		if (_scene_paths.size() > 0 and progress_bar2.value == 100) or (_scene_paths.size() == 0 and progress_bar1.value ==100) :
+		if (_scene_paths.size() > 0 and progress_bar2.value >= 99.0) or (_scene_paths.size() == 0 and progress_bar1.value >= 99.0) :
 			_prepare_for_exit() # Clean up before leaving!
 			LevelManager.load_new_level(_scene_path)
 
@@ -310,8 +303,7 @@ func _add_material(mat: Material) -> void:
 	newMesh.position = Vector3(randf(), randf(), randf())
 	
 	# Optional: Keep the label updated
-	var items = mat.resource_path.split("/")
-	label2.text = "Compiling... " + items[items.size() - 1].split(".")[0]
+	label2.text = "Compiling... " + mat.resource_path.get_file().get_basename()
 
 	# Store the reference so we can delete it later
 	_temp_compiler_meshes.append(newMesh)
@@ -323,7 +315,3 @@ func _prepare_for_exit():
 		if is_instance_valid(mesh):
 			mesh.queue_free()
 	_temp_compiler_meshes.clear()
-
-	# 2. If you manually instantiated a node for the scene, ensure it's handled
-	if is_instance_valid(_loading_scene_node):
-		_loading_scene_node.queue_free()
