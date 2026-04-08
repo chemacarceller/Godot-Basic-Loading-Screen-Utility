@@ -12,11 +12,17 @@ var _temp_compiler_meshes: Array[MeshInstance3D] = []
 
 # All scenes to be loaded one after the other, can be empty (scenes = prefabs)
 ## All scenes to be loaded one after the other, can be empty (scenes = prefabs)
-@onready var _scene_paths : Array[String] = ["res://main/prefabs/weapons/assault_rifle/assault_rifle.tscn","res://main/prefabs/bullets/projectile/projectile.tscn"]
+@onready var _scene_paths : Array[String] = ["res://main/characters/brian/brian.tscn","res://main/characters/man/man.tscn","res://main/characters/manequin1/manequin1.tscn","res://main/characters/manequin2/manequin2.tscn","res://main/characters/remi/remi.tscn","res://main/prefabs/weapons/assault_rifle/assault_rifle.tscn","res://main/prefabs/bullets/projectile/projectile.tscn"]
 var _scene_paths_element : String = ""
 # Meshes of the previous prefabs to be located in memory, the key is the name of the prefab
 @onready var _meshes : Dictionary = {
-	"assault_rifle" : ["res://main/prefabs/weapons/assault_rifle/mesh/assault_rifle.tres"]
+	"brian" : [],
+	"man" : [],
+	"manequin1" : [],
+	"manequin2" : [],
+	"remi" : [],
+	"assault_rifle" : ["res://main/prefabs/weapons/assault_rifle/mesh/assault_rifle.tres"],
+	"projectile" : []
 }
 
 # All materials to be compiled, can be empty
@@ -56,11 +62,14 @@ var _progress2_value : float = 0.0
 func _notification(what):
 	if what == NOTIFICATION_WM_CLOSE_REQUEST:
 		MyLogger.info(" LoadingScreen Exiting : " + name + " ..." , 'LoadingScreen.gd',61,true)
+		_prepare_for_exit()
 
 
 # Load the scene at the given path.
 # When this is finished loading, the "scene_loaded" signal will be emitted.
 func _ready() -> void:  
+	# The loading Screen is loaded form the Project settings
+	MyLogger.info(name + " Instantiated ... ","loadingScreen.gd",71, true)
 
 	# Progress Bar 2 should be used ?
 	# If the scenes array has only one member and there ara none material to be compiled the second progressbar has no sense, hiding it and putting to 100%
@@ -215,7 +224,7 @@ func _process(delta: float):
 						
 						# One prefab is already loaded, we make a reference in memory, used by spawning
 						var prefabObj : PackedScene = ResourceLoader.load_threaded_get(_scene_paths_element) as PackedScene
-						GameInstance._prefabs[_scene_paths_element.get_file().get_basename()]= prefabObj
+						GameInstance._prefabs[_scene_paths_element.get_file().get_basename()]= prefabObj.instantiate()
 						MyLogger.info("The prefab " + _scene_paths_element.get_file().get_basename() + " -- " + str(prefabObj) + " has been stored in memory in GameInstance._prefabs['" + _scene_paths_element.get_file().get_basename()  + "'] to be spawned in an ultra-fast way",'loadingscreen.gd',237,true)
 						screenLoaded.emit()
 
@@ -310,8 +319,12 @@ func _add_material(mat: Material) -> void:
 
 
 func _prepare_for_exit():
-	# 1. Remove and free the dummy meshes used for compilation
-	for mesh in _temp_compiler_meshes:
-		if is_instance_valid(mesh):
+	for mesh in  _temp_compiler_meshes :
+		if mesh.is_inside_tree() :
 			mesh.queue_free()
+			mesh = null
+		else:
+			mesh.free()
+			mesh = null
+
 	_temp_compiler_meshes.clear()
