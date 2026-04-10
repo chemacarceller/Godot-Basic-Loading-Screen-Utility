@@ -16,11 +16,11 @@ var _temp_compiler_meshes: Array[MeshInstance3D] = []
 var _scene_paths_element : String = ""
 # Meshes of the previous prefabs to be located in memory, the key is the name of the prefab
 @onready var _meshes : Dictionary = {
-	"brian" : [],
-	"man" : [],
-	"manequin1" : [],
-	"manequin2" : [],
-	"remi" : [],
+	"brian" : ["res://main/characters/brian/mesh/Brian_Body.tres","res://main/characters/brian/mesh/Brian_Eyelashes.tres","res://main/characters/brian/mesh/Brian_Pants.tres","res://main/characters/brian/mesh/Brian_Shirt.tres","res://main/characters/brian/mesh/Brian_Sneakers.tres"],
+	"man" : ["res://main/characters/man/mesh/Man_Body.tres","res://main/characters/man/mesh/Man_Collar.tres","res://main/characters/man/mesh/Man_Eyelashes.tres","res://main/characters/man/mesh/Man_Hair.tres","res://main/characters/man/mesh/Man_Pants.tres","res://main/characters/man/mesh/Man_Shoes.tres","res://main/characters/man/mesh/Man_Sweater.tres"],
+	"manequin1" : ["res://main/characters/manequin1/mesh/Manequin1_Joints.tres","res://main/characters/manequin1/mesh/Manequin1_Surface.tres"],
+	"manequin2" : ["res://main/characters/manequin2/mesh/Manequin2_Joints.tres","res://main/characters/manequin2/mesh/Manequin2_Surface.tres"],
+	"remi" : ["res://main/characters/remi/mesh/Remi_Body.tres","res://main/characters/remi/mesh/Remi_Bottoms.tres","res://main/characters/remi/mesh/Remi_Eyelashes.tres","res://main/characters/remi/mesh/Remi_Eyes.tres","res://main/characters/remi/mesh/Remi_Hair.tres","res://main/characters/remi/mesh/Remi_Shoes.tres","res://main/characters/remi/mesh/Remi_Tops.tres"],
 	"assault_rifle" : ["res://main/prefabs/weapons/assault_rifle/mesh/assault_rifle.tres"],
 	"projectile" : []
 }
@@ -62,14 +62,18 @@ var _progress2_value : float = 0.0
 func _notification(what):
 	if what == NOTIFICATION_WM_CLOSE_REQUEST:
 		MyLogger.info(" LoadingScreen Exiting : " + name + " ..." , 'LoadingScreen.gd',61,true)
-		_prepare_for_exit()
 
 
 # Load the scene at the given path.
 # When this is finished loading, the "scene_loaded" signal will be emitted.
 func _ready() -> void:  
+
 	# The loading Screen is loaded form the Project settings
 	MyLogger.info(name + " Instantiated ... ","loadingScreen.gd",71, true)
+
+	# setting the loading screen camera
+	var camera = get_node("Camera3D")
+	if camera : camera.make_current()
 
 	# Progress Bar 2 should be used ?
 	# If the scenes array has only one member and there ara none material to be compiled the second progressbar has no sense, hiding it and putting to 100%
@@ -114,27 +118,17 @@ func _load_scene(path : String) :
 	if _meshes.has(path.get_file().get_basename()) :
 		for mesh in _meshes[path.get_file().get_basename()] :
 			MyLogger.info("The mesh : " + mesh + " is being LOADED",'loadingscreen.gd',129,true)
-			GameInstance._meshes.append(load(mesh))
-			MyLogger.info("The mesh : " + str(load(mesh)) + " has been stored in memory",'loadingscreen.gd',130,true)
+			var loaded_mesh = load(mesh)
+			if loaded_mesh:
+				MyLogger.info("The mesh : " + str(load(mesh)) + " has been stored in memory",'loadingscreen.gd',130,true)
+				GameInstance._meshes.append(loaded_mesh)
+			else:
+				MyLogger.error("Mesh loading failed : " + mesh, "loadingScreen.gd")
 
 
 func _load_material(path : String) :
-
-	# if is already cached go to the next scene emitting the signal that executes the _launch_loading() function
-	# Not used, force to load again the material if needed due to the progress bar behaviour we want to have loading one after the other when the bar2 arrives its right value
-	# Uncomment it if you prefer not loading the materials again
-	#if ResourceLoader.has_cached(path) :
-
-		# The compilation is being done via the _precompile_material function
-		#var mat : Material = ResourceLoader.load(_materials[_material_index]) as Material
-		#_precompile_material(mat)
-
-		#_material_index += 1
-		#screenLoaded.emit()
-	#else :
-		# Begins the loading process...
-		ResourceLoader.load_threaded_request(path, "", true)
-		MyLogger.info("The material : " + path + " is being LOADED,","loadingscreen.gd", 147)
+	ResourceLoader.load_threaded_request(path, "", true)
+	MyLogger.info("The material : " + path + " is being LOADED,","loadingscreen.gd", 147)
 
 
 
@@ -142,6 +136,7 @@ func _load_material(path : String) :
 
 # Function to process the signal emitted
 # Just load the next scene or the next material or just load the last scene
+var _is_loading_level : bool = false
 func _launch_loading() :
 
 	# If there are more scenes to be loaded...
@@ -154,9 +149,11 @@ func _launch_loading() :
 
 		# Loading the next scene in memory
 		label2.text = "Loading Prefabs... " + _scene_paths[_scene_index].get_file().get_basename()
+
 		_load_scene(_scene_paths[_scene_index])
 
 	else :
+
 		# The _scenesBeingLoaded is put to false indicating the scene process has finished 
 		# Also used to execute some code only once, that is preparing the level to be loaded and reseting the progress bar 1
 		if _scenesBeingLoaded :
@@ -167,19 +164,44 @@ func _launch_loading() :
 
 		# If the materials array is empty just loading the main scene
 		if _materials.size() == 0 :
-			_prepare_for_exit() # Clean up before leaving!
-			LevelManager.load_new_level(_scene_path)
+			if not _is_loading_level : 
+				_is_loading_level = true
+
+				label2.text = "Finalizing shaders..."
+				_prepare_for_exit()
+
+				GameInstance.start_game_timer()
+
+				# We display the time and the seconds counter at zero emiting an event
+				EventBus.emit(_ready, EventBus.EVENT.Time_TicToc, 0)
+
+				# Ordering the level change
+				LevelManager.load_new_level(_scene_path)
+
 
 		# If it is request a valid material
 		if _material_index < _materials.size() :
+			
 			# We load all the materials one after the other and precompile them
 			_load_material(_materials[_material_index])
 
 		# If we had scenes to load the new level is loaded when progress 2 bar arrives to 100
 		# If we dont have scenes to load the new level is loaded when progress 1 bar arrives to 100
 		if (_scene_paths.size() > 0 and progress_bar2.value >= 99.0) or (_scene_paths.size() == 0 and progress_bar1.value >= 99.0) :
-			_prepare_for_exit() # Clean up before leaving!
-			LevelManager.load_new_level(_scene_path)
+			if not _is_loading_level : 
+				_is_loading_level = true
+
+				label2.text = "Finalizing shaders..."
+				_prepare_for_exit()
+
+				# Starting the global timer
+				GameInstance.start_game_timer()
+
+				# We display the time and the seconds counter at zero emiting an event
+				EventBus.emit(_ready, EventBus.EVENT.Time_TicToc, 0)
+
+				# Ordering the level change
+				LevelManager.load_new_level(_scene_path)
 
 
 # Executed each frame, main function that handles the loading and compiling process
@@ -209,7 +231,7 @@ func _process(delta: float):
 				progress_bar1.value = move_toward(progress_bar1.value, 100.0, delta * progress_speed * _scene_paths.size())
 				
 				# Once the process has finished in the sense that the bar 1 arrives 100% the progress bar 2 moves to the corresponding value
-				if progress_bar1.value == 100 :
+				if progress_bar1.value >= 99.5 :
 					
 					# If there are no materials the bar 2 goes to 100%
 					# If there are materials the bar 2 goes to 50%
@@ -219,14 +241,17 @@ func _process(delta: float):
 						_progress2_value = (float) (_scene_index + 1) * 50 / _scene_paths.size()
 
 					# Only when the second bar arrives the corresponding value it goes to the next step
-					if round(progress_bar2.value) == round(_progress2_value) :
+					if abs(progress_bar2.value - _progress2_value) < 0.1 : # round(progress_bar2.value) == round(_progress2_value) :
 						_scene_index += 1
 						
-						# One prefab is already loaded, we make a reference in memory, used by spawning
-						var prefabObj : PackedScene = ResourceLoader.load_threaded_get(_scene_paths_element) as PackedScene
-						GameInstance._prefabs[_scene_paths_element.get_file().get_basename()]= prefabObj.instantiate()
-						MyLogger.info("The prefab " + _scene_paths_element.get_file().get_basename() + " -- " + str(prefabObj) + " has been stored in memory in GameInstance._prefabs['" + _scene_paths_element.get_file().get_basename()  + "'] to be spawned in an ultra-fast way",'loadingscreen.gd',237,true)
-						screenLoaded.emit()
+						var prefabObj = ResourceLoader.load_threaded_get(_scene_paths_element)
+						if prefabObj is PackedScene:
+							var key = _scene_paths_element.get_file().get_basename()
+							GameInstance._prefabs[key] = prefabObj.instantiate()
+							MyLogger.info("Prefab stored: " + key, 'loadingscreen.gd')
+							screenLoaded.emit()
+						else:
+							MyLogger.error("Resource is not a PackedScene: " + _scene_paths_element)
 
 				progress_bar2.value = move_toward(progress_bar2.value, _progress2_value, delta * progress_speed)
 	
@@ -255,7 +280,7 @@ func _process(delta: float):
 				status = ResourceLoader.load_threaded_get_status(_materials[_material_index], progress)
 
 				# if is loaded and the progress bar has arrived the target controlled via the progress bar 1, it is used the round function to avoid difference in decimals
-				if status == ResourceLoader.ThreadLoadStatus.THREAD_LOAD_LOADED and round(progress_bar1.value) == round(_progress1_value) :
+				if status == ResourceLoader.ThreadLoadStatus.THREAD_LOAD_LOADED and abs(progress_bar1.value - _progress1_value) < 0.1 :    # and round(progress_bar1.value) == round(_progress1_value) :
 					
 					# The compilation is being done via the _precompile_material function
 					var mat : Material = ResourceLoader.load_threaded_get(_materials[_material_index]) as Material
@@ -267,7 +292,7 @@ func _process(delta: float):
 
 			# If we dont have any more material and the progress bar has arrived to 100%
 			# This is needed because we wait until bar2 arrives 100% once all materials are loaded
-			elif progress_bar1.value == 100 :
+			elif progress_bar1.value >= 99.5 :
 				screenLoaded.emit()
 				
 	# If we have none material and the scene preload process has finished
@@ -294,11 +319,16 @@ func _precompile_material(mat : Material) -> void :
 
 func _add_material(mat: Material) -> void:
 	var quad: QuadMesh = QuadMesh.new()
-	quad.size = Vector2.ZERO # Keep it invisible
-	
 	var newMesh: MeshInstance3D = MeshInstance3D.new()
 	newMesh.mesh = quad
+
+	# Actual minimum size
+	quad.size = Vector2(0.1, 0.1)
 	
+	# Put it far away but "in front" of the camera
+	newMesh.position = Vector3(0, 0, 0) 
+	newMesh.visible = true
+
 	# CRITICAL: Disable shadows to avoid the GLES3 null material check
 	newMesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	
@@ -309,7 +339,7 @@ func _add_material(mat: Material) -> void:
 	add_child(newMesh)
 	
 	# Force a transform update to nudge the renderer to compile the shader
-	newMesh.position = Vector3(randf(), randf(), randf())
+	newMesh.position = Vector3(randf(), randf(), randf()*-100)
 	
 	# Optional: Keep the label updated
 	label2.text = "Compiling... " + mat.resource_path.get_file().get_basename()
@@ -319,12 +349,18 @@ func _add_material(mat: Material) -> void:
 
 
 func _prepare_for_exit():
-	for mesh in  _temp_compiler_meshes :
-		if mesh.is_inside_tree() :
+
+	MyLogger.info("LoadingScreen Exiting: " + name + " ... Freeing temporal meshes", 'LoadingScreen.gd', 322, true)
+	
+	for mesh in _temp_compiler_meshes:
+		if is_instance_valid(mesh) :
+			# queue_free() automatically handles whether it is inside or outside the tree safely
 			mesh.queue_free()
-			mesh = null
-		else:
-			mesh.free()
-			mesh = null
+			MyLogger.info("Released mesh: " + str(mesh), 'LoadingScreen.gd', 325, true)
 
 	_temp_compiler_meshes.clear()
+
+	# Extra check: Are there any MeshInstance3D children of this node?
+	for child in get_children() :
+		if child is MeshInstance3D:
+			child.free()

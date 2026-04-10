@@ -2,22 +2,8 @@
 
 [ext_resource type="Script" uid="uid://d4lt31beca4ps" path="res://main/plugins/loadingscreen/LoadingScreen.gd" id="1_hmds2"]
 [ext_resource type="Texture2D" uid="uid://cee8r2jod80fa" path="res://icon.svg" id="2_f7e8c"]
+[ext_resource type="PackedScene" uid="uid://bcic0cj1av3e2" path="res://main/levels/mainlevel/lighting.tscn" id="2_upvmm"]
 [ext_resource type="Script" uid="uid://tww6x3igemf1" path="res://main/plugins/loadingscreen/texture_rect.gd" id="3_oswvo"]
-
-[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_v5vua"]
-sky_top_color = Color(0.140473, 0.175644, 0.224554, 1)
-sky_horizon_color = Color(0.357102, 0.374718, 0.398711, 1)
-ground_bottom_color = Color(0.141176, 0.176471, 0.223529, 1)
-ground_horizon_color = Color(0.357102, 0.374718, 0.398711, 1)
-
-[sub_resource type="Sky" id="Sky_5gt0t"]
-sky_material = SubResource("ProceduralSkyMaterial_v5vua")
-
-[sub_resource type="Environment" id="Environment_brmxf"]
-background_mode = 2
-sky = SubResource("Sky_5gt0t")
-tonemap_mode = 2
-glow_enabled = true
 
 [sub_resource type="LabelSettings" id="LabelSettings_e7efo"]
 font_size = 37
@@ -25,16 +11,10 @@ font_size = 37
 [node name="LoadingScreen" type="Node3D" unique_id=1546283903]
 script = ExtResource("1_hmds2")
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=211169149]
-environment = SubResource("Environment_brmxf")
+[node name="Lighting" parent="." unique_id=874770128 instance=ExtResource("2_upvmm")]
 
 [node name="Camera3D" type="Camera3D" parent="." unique_id=1733119291]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1.73866)
-
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1364845938]
-transform = Transform3D(-0.866023, -0.433016, 0.250001, 0, 0.499998, 0.866027, -0.500003, 0.749999, -0.43301, 0, 0, 0)
-shadow_enabled = true
-sky_mode = 2
 
 [node name="HUD" type="Control" parent="." unique_id=266655366]
 layout_mode = 3
