@@ -12,7 +12,7 @@ var _temp_compiler_meshes: Array[MeshInstance3D] = []
 
 # All scenes to be loaded one after the other, can be empty (scenes = prefabs)
 ## All scenes to be loaded one after the other, can be empty (scenes = prefabs)
-@onready var _scene_paths : Array[String] = ["res://main/characters/brian/brian.tscn","res://main/characters/man/man.tscn","res://main/characters/manequin1/manequin1.tscn","res://main/characters/manequin2/manequin2.tscn","res://main/characters/remi/remi.tscn","res://main/prefabs/weapons/assault_rifle/assault_rifle.tscn","res://main/prefabs/bullets/projectile/projectile.tscn"]
+@onready var _scene_paths : Array[String] = ["res://main/characters/brian/brian.tscn","res://main/characters/man/man.tscn","res://main/characters/manequin1/manequin1.tscn","res://main/characters/manequin2/manequin2.tscn","res://main/characters/remi/remi.tscn","res://main/prefabs/weapons/assault_rifle/assault_rifle.tscn"]
 var _scene_paths_element : String = ""
 # Meshes of the previous prefabs to be located in memory, the key is the name of the prefab
 @onready var _meshes : Dictionary = {
@@ -21,8 +21,7 @@ var _scene_paths_element : String = ""
 	"manequin1" : ["res://main/characters/manequin1/mesh/Manequin1_Joints.tres","res://main/characters/manequin1/mesh/Manequin1_Surface.tres"],
 	"manequin2" : ["res://main/characters/manequin2/mesh/Manequin2_Joints.tres","res://main/characters/manequin2/mesh/Manequin2_Surface.tres"],
 	"remi" : ["res://main/characters/remi/mesh/Remi_Body.tres","res://main/characters/remi/mesh/Remi_Bottoms.tres","res://main/characters/remi/mesh/Remi_Eyelashes.tres","res://main/characters/remi/mesh/Remi_Eyes.tres","res://main/characters/remi/mesh/Remi_Hair.tres","res://main/characters/remi/mesh/Remi_Shoes.tres","res://main/characters/remi/mesh/Remi_Tops.tres"],
-	"assault_rifle" : ["res://main/prefabs/weapons/assault_rifle/mesh/assault_rifle.tres"],
-	"projectile" : []
+	"assault_rifle" : ["res://main/prefabs/weapons/assault_rifle/mesh/assault_rifle.tres"]
 }
 
 # All materials to be compiled, can be empty
