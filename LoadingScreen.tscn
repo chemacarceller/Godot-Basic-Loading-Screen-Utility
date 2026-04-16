@@ -2,14 +2,29 @@
 
 [ext_resource type="Script" uid="uid://d4lt31beca4ps" path="res://main/plugins/loadingscreen/LoadingScreen.gd" id="1_hmds2"]
 [ext_resource type="Texture2D" uid="uid://cee8r2jod80fa" path="res://icon.svg" id="2_f7e8c"]
-[ext_resource type="PackedScene" uid="uid://bcic0cj1av3e2" path="res://main/levels/mainlevel/lighting.tscn" id="2_upvmm"]
+[ext_resource type="PackedScene" uid="uid://bcic0cj1av3e2" path="res://main/plugins/lighting/lighting.tscn" id="2_upvmm"]
+[ext_resource type="Material" uid="uid://bbhfqyh84ijva" path="res://main/characters/brian/materials/brian.tres" id="2_yr7a4"]
+[ext_resource type="PackedScene" uid="uid://djkek0bduqxkk" path="res://main/characters/brian/brian.tscn" id="3_el17l"]
 [ext_resource type="Script" uid="uid://tww6x3igemf1" path="res://main/plugins/loadingscreen/texture_rect.gd" id="3_oswvo"]
+[ext_resource type="PackedScene" uid="uid://108wptwia2ei" path="res://main/characters/man/man.tscn" id="4_6ipdi"]
+[ext_resource type="PackedScene" uid="uid://8c755h5kyoxw" path="res://main/characters/manequin1/manequin1.tscn" id="5_2ih8f"]
+[ext_resource type="PackedScene" uid="uid://66dchrikakuc" path="res://main/characters/manequin2/manequin2.tscn" id="6_2um74"]
+[ext_resource type="PackedScene" uid="uid://l8qtsnl0bjwk" path="res://main/characters/remi/remi.tscn" id="7_7fb2b"]
+[ext_resource type="PackedScene" uid="uid://f85uo8o1u517" path="res://main/prefabs/weapons/assault_rifle/assault_rifle.tscn" id="8_tynqk"]
+[ext_resource type="Script" uid="uid://c4jm48yuuhjth" path="res://main/plugins/loadingscreen/loadingData.gd" id="9_vxrr8"]
+
+[sub_resource type="Resource" id="Resource_21oim"]
+script = ExtResource("9_vxrr8")
+prefabs_to_load = Array[PackedScene]([ExtResource("3_el17l"), ExtResource("4_6ipdi"), ExtResource("5_2ih8f"), ExtResource("6_2um74"), ExtResource("7_7fb2b"), ExtResource("8_tynqk")])
+materials_to_compile = Array[Material]([ExtResource("2_yr7a4")])
+metadata/_custom_type_script = "uid://c4jm48yuuhjth"
 
 [sub_resource type="LabelSettings" id="LabelSettings_e7efo"]
 font_size = 37
 
 [node name="LoadingScreen" type="Node3D" unique_id=1546283903]
 script = ExtResource("1_hmds2")
+data_resource = SubResource("Resource_21oim")
 
 [node name="Lighting" parent="." unique_id=874770128 instance=ExtResource("2_upvmm")]
 

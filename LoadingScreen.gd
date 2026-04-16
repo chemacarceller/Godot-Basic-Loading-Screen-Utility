@@ -3,37 +3,11 @@
 # And also the precompilation of a series of materials of the scene to be load
 extends Node3D
 
-var _temp_compiler_meshes: Array[MeshInstance3D] = []
-
-# Stores the scene to be loaded once the preload and precompile process has finished
-## Stores the scene to be loaded once the preload and precompile process has finished
-@onready var _scene_path : String = "res://main/levels/mainlevel.tscn"
-
-
-# All scenes to be loaded one after the other, can be empty (scenes = prefabs)
-## All scenes to be loaded one after the other, can be empty (scenes = prefabs)
-@onready var _scene_paths : Array[String] = ["res://main/characters/brian/brian.tscn","res://main/characters/man/man.tscn","res://main/characters/manequin1/manequin1.tscn","res://main/characters/manequin2/manequin2.tscn","res://main/characters/remi/remi.tscn","res://main/prefabs/weapons/assault_rifle/assault_rifle.tscn"]
-var _scene_paths_element : String = ""
-# Meshes of the previous prefabs to be located in memory, the key is the name of the prefab
-@onready var _meshes : Dictionary = {
-	"brian" : ["res://main/characters/brian/mesh/Brian_Body.tres","res://main/characters/brian/mesh/Brian_Eyelashes.tres","res://main/characters/brian/mesh/Brian_Pants.tres","res://main/characters/brian/mesh/Brian_Shirt.tres","res://main/characters/brian/mesh/Brian_Sneakers.tres"],
-	"man" : ["res://main/characters/man/mesh/Man_Body.tres","res://main/characters/man/mesh/Man_Collar.tres","res://main/characters/man/mesh/Man_Eyelashes.tres","res://main/characters/man/mesh/Man_Hair.tres","res://main/characters/man/mesh/Man_Pants.tres","res://main/characters/man/mesh/Man_Shoes.tres","res://main/characters/man/mesh/Man_Sweater.tres"],
-	"manequin1" : ["res://main/characters/manequin1/mesh/Manequin1_Joints.tres","res://main/characters/manequin1/mesh/Manequin1_Surface.tres"],
-	"manequin2" : ["res://main/characters/manequin2/mesh/Manequin2_Joints.tres","res://main/characters/manequin2/mesh/Manequin2_Surface.tres"],
-	"remi" : ["res://main/characters/remi/mesh/Remi_Body.tres","res://main/characters/remi/mesh/Remi_Bottoms.tres","res://main/characters/remi/mesh/Remi_Eyelashes.tres","res://main/characters/remi/mesh/Remi_Eyes.tres","res://main/characters/remi/mesh/Remi_Hair.tres","res://main/characters/remi/mesh/Remi_Shoes.tres","res://main/characters/remi/mesh/Remi_Tops.tres"],
-	"assault_rifle" : ["res://main/prefabs/weapons/assault_rifle/mesh/assault_rifle.tres"]
-}
-
-# All materials to be compiled, can be empty
-## All materials to be compiled, can be empty
-@onready var _materials : Array[String] = ["res://main/levels/mainlevel/world/materials/green.tres", "res://main/levels/mainlevel/world/materials/yellow.tres","res://main/levels/mainlevel/world/materials/blue.tres","res://main/levels/mainlevel/world/materials/worldmap2.tres","res://main/levels/mainlevel/world/materials/worldmap1.tres","res://main/levels/mainlevel/world/materials/chess5.tres","res://main/levels/mainlevel/world/materials/chess4.tres","res://main/levels/mainlevel/world/materials/chess3.tres","res://main/levels/mainlevel/world/materials/chess2.tres","res://main/levels/mainlevel/world/materials/chess1.tres","res://main/levels/mainlevel/world/materials/bricks2.tres","res://main/levels/mainlevel/world/materials/bricks1.tres","res://main/prefabs/weapons/assault_rifle/materials/DarkMetal.tres","res://main/prefabs/weapons/assault_rifle/materials/DarkWood.tres","res://main/prefabs/weapons/assault_rifle/materials/Metal.tres","res://main/prefabs/weapons/assault_rifle/materials/Black.tres","res://main/characters/remi/materials/remi_skeleton3d_tops.tres","res://main/characters/remi/materials/remi_skeleton3d_shoes.tres","res://main/characters/remi/materials/remi_skeleton3d_hair.tres","res://main/characters/remi/materials/remi_skeleton3d_bottoms.tres","res://main/characters/remi/materials/remi_skeleton3d_body.tres","res://main/characters/man/materials/man_skeleton_body.tres","res://main/characters/man/materials/man_skeleton_hair.tres","res://main/characters/brian/materials/brian.tres"]
+var _temp_compilermeshes_to_store: Array[MeshInstance3D] = []
 
 # Indicates which scene and which material of the previous arrays is being loaded
 var _scene_index : int = 0
 var _material_index : int = 0
-
-# Array so that the materials are not compiled twice
-var _foundMaterials: Array[Material] = []
 
 
 # Indicates if the scenes preloading process is runing, used to say when all the scenes are preload
@@ -65,7 +39,39 @@ func _notification(what):
 
 # Load the scene at the given path.
 # When this is finished loading, the "scene_loaded" signal will be emitted.
-func _ready() -> void:  
+
+# Exportas la variable para asignar el archivo .tres desde el Inspector
+@export var data_resource: LoadingData
+
+# Variables internas que ahora se alimentan del Resource
+# Stores the scene to be loaded once the preload and precompile process has finished
+## Stores the scene to be loaded once the preload and precompile process has finished
+var _scene_path : String
+
+# All scenes to be loaded one after the other, can be empty (scenes = prefabs)
+## All scenes to be loaded one after the other, can be empty (scenes = prefabs)
+var _scene_paths_element : String = ""
+var _scene_paths : Array[String] = []
+
+# All materials to be compiled, can be empty
+## All materials to be compiled, can be empty
+var _materials : Array[Material] = []
+
+
+var meshes_to_store : Dictionary = {}
+
+func _ready() -> void:
+	if data_resource:
+
+		_scene_path = data_resource.main_scene_path
+		
+		# Convertimos los PackedScenes a rutas de String para el ResourceLoader
+		for scene in data_resource.prefabs_to_load:
+			_scene_paths.append(scene.resource_path)
+			
+		_materials = data_resource.materials_to_compile
+
+		meshes_to_store = data_resource.meshes_to_store
 
 	# The loading Screen is loaded form the Project settings
 	MyLogger.info(name + " Instantiated ... ","loadingScreen.gd",71, true)
@@ -114,15 +120,26 @@ func _load_scene(path : String) :
 	ResourceLoader.load_threaded_request(path, "", true)
 
 	# Loading the meshes of the prefab being loaded
-	if _meshes.has(path.get_file().get_basename()) :
-		for mesh in _meshes[path.get_file().get_basename()] :
-			MyLogger.info("The mesh : " + mesh + " is being LOADED",'loadingscreen.gd',129,true)
-			var loaded_mesh = load(mesh)
-			if loaded_mesh:
-				MyLogger.info("The mesh : " + str(load(mesh)) + " has been stored in memory",'loadingscreen.gd',130,true)
-				GameInstance._meshes.append(loaded_mesh)
+	if meshes_to_store.has(path.get_file().get_basename()) :
+
+		for mesh_data in meshes_to_store[path.get_file().get_basename()] :
+			MyLogger.info("The mesh : " + str(mesh_data) + " is being LOADED",'loadingscreen.gd',129,true)
+
+			var mesh_resource: Mesh
+		
+			# Si guardaste la ruta como String en el Diccionario
+			if mesh_data is String:
+				mesh_resource = load(mesh_data)
+
+			# Si arrastraste el archivo directamente al Diccionario (es un objeto Mesh)
+			elif mesh_data is Mesh:
+				mesh_resource = mesh_data
+			
+			if mesh_resource :
+				MyLogger.info("The mesh : " + str(mesh_resource) + " has been stored in memory",'loadingscreen.gd',130,true)
+				GameInstance.meshes_to_store.append(mesh_resource)
 			else:
-				MyLogger.error("Mesh loading failed : " + mesh, "loadingScreen.gd")
+				MyLogger.error("Mesh loading failed : " + str(mesh_data), "loadingScreen.gd")
 
 
 func _load_material(path : String) :
@@ -137,6 +154,9 @@ func _load_material(path : String) :
 # Just load the next scene or the next material or just load the last scene
 var _is_loading_level : bool = false
 func _launch_loading() :
+
+	# If we're already leaving, we ignore any residual signals.
+	if _is_loading_level : return
 
 	# If there are more scenes to be loaded...
 	# If the index is equal the array size that means we are out of bounds and must change to material loading
@@ -167,22 +187,14 @@ func _launch_loading() :
 				_is_loading_level = true
 
 				label2.text = "Finalizing shaders..."
-				_prepare_for_exit()
-
-				GameInstance.start_game_timer()
-
-				# We display the time and the seconds counter at zero emiting an event
-				EventBus.emit(_ready, EventBus.EVENT.Time_TicToc, 0)
-
-				# Ordering the level change
-				LevelManager.load_new_level(_scene_path)
+				await _finalize_and_exit()
 
 
 		# If it is request a valid material
 		if _material_index < _materials.size() :
 			
 			# We load all the materials one after the other and precompile them
-			_load_material(_materials[_material_index])
+			_load_material(_materials[_material_index].resource_path)
 
 		# If we had scenes to load the new level is loaded when progress 2 bar arrives to 100
 		# If we dont have scenes to load the new level is loaded when progress 1 bar arrives to 100
@@ -191,20 +203,13 @@ func _launch_loading() :
 				_is_loading_level = true
 
 				label2.text = "Finalizing shaders..."
-				_prepare_for_exit()
-
-				# Starting the global timer
-				GameInstance.start_game_timer()
-
-				# We display the time and the seconds counter at zero emiting an event
-				EventBus.emit(_ready, EventBus.EVENT.Time_TicToc, 0)
-
-				# Ordering the level change
-				LevelManager.load_new_level(_scene_path)
-
+				await _finalize_and_exit()
 
 # Executed each frame, main function that handles the loading and compiling process
 func _process(delta: float):
+
+	# SECURITY LAYER 2: If the output process started, we stopped processing barcode logic.
+	if _is_loading_level : return
 
 	# If the loading process of the scenes has began and not ended or there are materials to compiled
 	if _scenesBeingLoaded or _materials.size() > 0:
@@ -276,13 +281,13 @@ func _process(delta: float):
 			if _material_index < _materials.size() :
 
 				# If we have a valid material
-				status = ResourceLoader.load_threaded_get_status(_materials[_material_index], progress)
+				status = ResourceLoader.load_threaded_get_status(_materials[_material_index].resource_path, progress)
 
 				# if is loaded and the progress bar has arrived the target controlled via the progress bar 1, it is used the round function to avoid difference in decimals
 				if status == ResourceLoader.ThreadLoadStatus.THREAD_LOAD_LOADED and abs(progress_bar1.value - _progress1_value) < 0.1 :    # and round(progress_bar1.value) == round(_progress1_value) :
 					
 					# The compilation is being done via the _precompile_material function
-					var mat : Material = ResourceLoader.load_threaded_get(_materials[_material_index]) as Material
+					var mat : Material = ResourceLoader.load_threaded_get(_materials[_material_index].resource_path) as Material
 					_precompile_material(mat)
 
 					# Once compiled the material we continue with the next one
@@ -302,21 +307,54 @@ func _process(delta: float):
 
 
 
-
 # Utility functions for precompiling the materials
+
+func pre_compile_materials(materials_list: Array[Material]):
+	var scenario = get_world_3d().scenario
+	var camera = get_viewport().get_camera_3d()
+	var rids_to_free = []
+	
+   	# 1. Create a generic mesh
+	var mesh_rid = RenderingServer.mesh_create()
+	var mesh_data = SphereMesh.new()
+	RenderingServer.mesh_set_custom_aabb(mesh_rid, AABB(Vector3(-1,-1,-1), Vector3(2,2,2)))
+	
+	for mat in materials_list:
+		var inst = RenderingServer.instance_create()
+		RenderingServer.instance_set_base(inst, mesh_data.get_rid())
+		RenderingServer.instance_geometry_set_material_override(inst, mat.get_rid())
+		RenderingServer.instance_set_scenario(inst, scenario)
+		
+		# Position yourself facing the camera if one exists
+		if camera:
+			var t = Transform3D(Basis(), camera.global_transform.origin - camera.global_transform.basis.z * 2.0)
+			RenderingServer.instance_set_transform(inst, t)
+		
+		rids_to_free.append(inst)
+	
+	# 2. Wait for the engine to render the frame
+	await get_tree().process_frame
+	
+	# 3. Clean everything
+	for rid in rids_to_free:
+		RenderingServer.free_rid(rid)
+	RenderingServer.free_rid(mesh_rid)
+	
+	print("Compilación de shaders completada.")
+
 
 func _precompile_material(mat : Material) -> void :
 	if mat == null:
 		MyLogger.error("Failed to compile: Material is null", "loadingscreen.gd")
 		return # Skip this iteration
 
-	if not mat in _foundMaterials:
+	if not mat in GameInstance._materials:
 		_add_material(mat)
-		_foundMaterials.append(mat)
 		GameInstance._materials.append(mat)
 
 
 func _add_material(mat: Material) -> void:
+
 	var quad: QuadMesh = QuadMesh.new()
 	var newMesh: MeshInstance3D = MeshInstance3D.new()
 	newMesh.mesh = quad
@@ -326,6 +364,7 @@ func _add_material(mat: Material) -> void:
 	
 	# Put it far away but "in front" of the camera
 	newMesh.position = Vector3(0, 0, 0) 
+	newMesh.layers = 2
 	newMesh.visible = true
 
 	# CRITICAL: Disable shadows to avoid the GLES3 null material check
@@ -344,22 +383,39 @@ func _add_material(mat: Material) -> void:
 	label2.text = "Compiling... " + mat.resource_path.get_file().get_basename()
 
 	# Store the reference so we can delete it later
-	_temp_compiler_meshes.append(newMesh)
+	_temp_compilermeshes_to_store.append(newMesh)
 
 
-func _prepare_for_exit():
-
-	MyLogger.info("LoadingScreen Exiting: " + name + " ... Freeing temporal meshes", 'LoadingScreen.gd', 322, true)
+# Función auxiliar para encapsular la salida limpia
+func _finalize_and_exit():
+	_is_loading_level = true
+	label2.text = "Finalizing shaders..."
 	
-	for mesh in _temp_compiler_meshes:
-		if is_instance_valid(mesh) :
-			# queue_free() automatically handles whether it is inside or outside the tree safely
-			mesh.queue_free()
-			MyLogger.info("Released mesh: " + str(mesh), 'LoadingScreen.gd', 325, true)
+	# CAPA DE SEGURIDAD 3: Desconexión física de la señal
+	if screenLoaded.is_connected(_launch_loading):
+		screenLoaded.disconnect(_launch_loading)
+	
+	await _prepare_for_exit()
 
-	_temp_compiler_meshes.clear()
+func _prepare_for_exit() :
+	MyLogger.info("LoadingScreen Exiting: " + name + " ... Freeing temporal meshes", 'LoadingScreen.gd', 383, true)
 
-	# Extra check: Are there any MeshInstance3D children of this node?
+	# Esperamos a la compilación asíncrona
+	await pre_compile_materials(GameInstance._materials)
+	
+	# Limpieza de mallas temporales
+	for node in _temp_compilermeshes_to_store :
+		if is_instance_valid(node):
+			node.queue_free()
+	_temp_compilermeshes_to_store.clear()
+
 	for child in get_children() :
 		if child is MeshInstance3D:
-			child.free()
+			child.queue_free()
+
+	# Ejecutamos los eventos de inicio de juego justo antes de cambiar de escena
+	GameInstance.start_game_timer()
+	EventBus.emit(_ready, EventBus.EVENT.Time_TicToc, 0)
+	
+	# CAMBIO DE NIVEL FINAL
+	LevelManager.load_new_level(_scene_path)
