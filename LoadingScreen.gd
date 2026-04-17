@@ -3,6 +3,33 @@
 # And also the precompilation of a series of materials of the scene to be load
 extends Node3D
 
+@export_range(5.0,250.0) var progress_speed : float = 100.0
+
+# Export the variable to assign the .tres file from the Inspector
+@export var data_resource: LoadingData
+
+# Internal variables that are now fed from the Resource in the _ready method
+
+# Stores the scene to be loaded once the preload and precompile process has finished
+## Stores the scene to be loaded once the preload and precompile process has finished
+var _scene_path : String
+
+# All scenes to be loaded one after the other, can be empty (scenes = prefabs)
+## All scenes to be loaded one after the other, can be empty (scenes = prefabs)
+var _scene_paths_element : String = ""
+var _scene_paths : Array[String] = []
+
+# All materials to be compiled, can be empty
+## All materials to be compiled, can be empty
+var _materials : Array[Material] = []
+
+# Store the meshes that need to be compiled
+var meshes_to_store : Dictionary = {}
+
+# =============================================================================
+
+
+# Auxiliary variable containing the meshes temporarily stored for compilation
 var _temp_compilermeshes_to_store: Array[MeshInstance3D] = []
 
 # Indicates which scene and which material of the previous arrays is being loaded
@@ -13,9 +40,6 @@ var _material_index : int = 0
 # Indicates if the scenes preloading process is runing, used to say when all the scenes are preload
 # Used to load the scene to be shown previously the materials are precompiled
 var _scenesBeingLoaded : bool = false
-
-
-@export_range(5.0,250.0) var progress_speed : float = 100.0
 
 
 # Signel emitted when a scene is loaded and there are other scenes to be loaded or materials to be compiled
@@ -37,31 +61,10 @@ func _notification(what):
 		MyLogger.info(" LoadingScreen Exiting : " + name + " ..." , 'LoadingScreen.gd',61,true)
 
 
-# Load the scene at the given path.
-# When this is finished loading, the "scene_loaded" signal will be emitted.
-
-# Exportas la variable para asignar el archivo .tres desde el Inspector
-@export var data_resource: LoadingData
-
-# Variables internas que ahora se alimentan del Resource
-# Stores the scene to be loaded once the preload and precompile process has finished
-## Stores the scene to be loaded once the preload and precompile process has finished
-var _scene_path : String
-
-# All scenes to be loaded one after the other, can be empty (scenes = prefabs)
-## All scenes to be loaded one after the other, can be empty (scenes = prefabs)
-var _scene_paths_element : String = ""
-var _scene_paths : Array[String] = []
-
-# All materials to be compiled, can be empty
-## All materials to be compiled, can be empty
-var _materials : Array[Material] = []
-
-
-var meshes_to_store : Dictionary = {}
-
 func _ready() -> void:
-	if data_resource:
+	
+	# Si se ha definido un data_resource
+	if data_resource :
 
 		_scene_path = data_resource.main_scene_path
 		
@@ -72,44 +75,49 @@ func _ready() -> void:
 		_materials = data_resource.materials_to_compile
 
 		meshes_to_store = data_resource.meshes_to_store
+		
+		# The loading Screen is loaded form the Project settings
+		MyLogger.info(name + " Instantiated ... ","loadingScreen.gd",71, true)
 
-	# The loading Screen is loaded form the Project settings
-	MyLogger.info(name + " Instantiated ... ","loadingScreen.gd",71, true)
+		# setting the loading screen camera
+		var camera = get_node("Camera3D")
+		if camera : camera.make_current()
 
-	# setting the loading screen camera
-	var camera = get_node("Camera3D")
-	if camera : camera.make_current()
+		# Progress Bar 2 should be used ?
+		# If the scenes array has only one member and there ara none material to be compiled the second progressbar has no sense, hiding it and putting to 100%
+		# If the scenes array is empty but there are materials to compile the second progressbar has no sense, hiding it and putting to 100%
+		if (_scene_paths.size() <= 1 and _materials.size() == 0) or (_scene_paths.size() == 0 and _materials.size() > 0):
+			progress_bar2.value=100
+			_progress2_value = 100
+			progress_bar2.hide()
+		else :
+			progress_bar2.value=0.0
+			_progress2_value = 0.0
+			progress_bar2.show()
 
-	# Progress Bar 2 should be used ?
-	# If the scenes array has only one member and there ara none material to be compiled the second progressbar has no sense, hiding it and putting to 100%
-	# If the scenes array is empty but there are materials to compile the second progressbar has no sense, hiding it and putting to 100%
-	if (_scene_paths.size() <= 1 and _materials.size() == 0) or (_scene_paths.size() == 0 and _materials.size() > 0):
-		progress_bar2.value=100
-		_progress2_value = 100
-		progress_bar2.hide()
+		# Connecting the signal to a function
+		screenLoaded.connect(_launch_loading)
+
+		# Initializing the progress bar 1 value
+		progress_bar1.value=0.0
+
+		# If there are no scenes go to the next step saying that the scenes loading process has begun
+		if _scene_paths.size() == 0 :
+			_scenesBeingLoaded = true
+			screenLoaded.emit()
+		else : 
+			# Loading the first scene
+			_scene_index = 0
+			label2.text = "Loading Prefabs... " + _scene_paths[_scene_index].get_file().get_basename()
+
+			# Begin the scenes preloading process
+			_scenesBeingLoaded = true
+			_load_scene(_scene_paths[_scene_index])
+
 	else :
-		progress_bar2.value=0.0
-		_progress2_value = 0.0
-		progress_bar2.show()
+		MyLogger.error("The necessary resources have not been defined on the loading screen",'LoadindScreen.gd',118, true)
+		await _finalize_and_exit()
 
-	# Connecting the signal to a function
-	screenLoaded.connect(_launch_loading)
-
-	# Initializing the progress bar 1 value
-	progress_bar1.value=0.0
-
-	# If there are no scenes go to the next step saying that the scenes loading process has begun
-	if _scene_paths.size() == 0 :
-		_scenesBeingLoaded = true
-		screenLoaded.emit()
-	else : 
-		# Loading the first scene
-		_scene_index = 0
-		label2.text = "Loading Prefabs... " + _scene_paths[_scene_index].get_file().get_basename()
-
-		# Begin the scenes preloading process
-		_scenesBeingLoaded = true
-		_load_scene(_scene_paths[_scene_index])
 
 
 func _load_scene(path : String) :

@@ -6,17 +6,28 @@
 [ext_resource type="Material" uid="uid://bbhfqyh84ijva" path="res://main/characters/brian/materials/brian.tres" id="2_yr7a4"]
 [ext_resource type="PackedScene" uid="uid://djkek0bduqxkk" path="res://main/characters/brian/brian.tscn" id="3_el17l"]
 [ext_resource type="Script" uid="uid://tww6x3igemf1" path="res://main/plugins/loadingscreen/texture_rect.gd" id="3_oswvo"]
+[ext_resource type="Material" uid="uid://ca5fgww7ea1rq" path="res://main/characters/man/materials/man_skeleton_body.tres" id="3_ta2kv"]
 [ext_resource type="PackedScene" uid="uid://108wptwia2ei" path="res://main/characters/man/man.tscn" id="4_6ipdi"]
+[ext_resource type="Material" uid="uid://cuuv22bpsn5hy" path="res://main/characters/man/materials/man_skeleton_hair.tres" id="4_hatsd"]
+[ext_resource type="Material" uid="uid://bpbvg4n218w6n" path="res://main/characters/remi/materials/remi_skeleton3d_body.tres" id="5_1kd8i"]
 [ext_resource type="PackedScene" uid="uid://8c755h5kyoxw" path="res://main/characters/manequin1/manequin1.tscn" id="5_2ih8f"]
 [ext_resource type="PackedScene" uid="uid://66dchrikakuc" path="res://main/characters/manequin2/manequin2.tscn" id="6_2um74"]
+[ext_resource type="Material" uid="uid://dc7sin0xrcwow" path="res://main/characters/remi/materials/remi_skeleton3d_bottoms.tres" id="6_nys3d"]
 [ext_resource type="PackedScene" uid="uid://l8qtsnl0bjwk" path="res://main/characters/remi/remi.tscn" id="7_7fb2b"]
+[ext_resource type="Material" uid="uid://c51w7vao2n8ck" path="res://main/characters/remi/materials/remi_skeleton3d_hair.tres" id="7_71doo"]
+[ext_resource type="Material" uid="uid://bnccb6hdrgpjn" path="res://main/characters/remi/materials/remi_skeleton3d_shoes.tres" id="8_kvkeh"]
 [ext_resource type="PackedScene" uid="uid://f85uo8o1u517" path="res://main/prefabs/weapons/assault_rifle/assault_rifle.tscn" id="8_tynqk"]
+[ext_resource type="Material" uid="uid://bg6gvfg7riss5" path="res://main/characters/remi/materials/remi_skeleton3d_tops.tres" id="9_c84s0"]
 [ext_resource type="Script" uid="uid://c4jm48yuuhjth" path="res://main/plugins/loadingscreen/loadingData.gd" id="9_vxrr8"]
+[ext_resource type="Material" uid="uid://nmily4l4j8fo" path="res://main/prefabs/weapons/assault_rifle/materials/Black.tres" id="10_0cqmb"]
+[ext_resource type="Material" uid="uid://xgmw8ejsgypo" path="res://main/prefabs/weapons/assault_rifle/materials/DarkMetal.tres" id="11_q6d82"]
+[ext_resource type="Material" uid="uid://ctdrrpwrcej4g" path="res://main/prefabs/weapons/assault_rifle/materials/DarkWood.tres" id="12_431jm"]
+[ext_resource type="Material" uid="uid://2kymye867ur4" path="res://main/prefabs/weapons/assault_rifle/materials/Metal.tres" id="13_wanom"]
 
-[sub_resource type="Resource" id="Resource_21oim"]
+[sub_resource type="Resource" id="Resource_w4f6n"]
 script = ExtResource("9_vxrr8")
 prefabs_to_load = Array[PackedScene]([ExtResource("3_el17l"), ExtResource("4_6ipdi"), ExtResource("5_2ih8f"), ExtResource("6_2um74"), ExtResource("7_7fb2b"), ExtResource("8_tynqk")])
-materials_to_compile = Array[Material]([ExtResource("2_yr7a4")])
+materials_to_compile = Array[Material]([ExtResource("2_yr7a4"), ExtResource("3_ta2kv"), ExtResource("4_hatsd"), ExtResource("5_1kd8i"), ExtResource("6_nys3d"), ExtResource("7_71doo"), ExtResource("8_kvkeh"), ExtResource("9_c84s0"), ExtResource("10_0cqmb"), ExtResource("11_q6d82"), ExtResource("12_431jm"), ExtResource("13_wanom")])
 metadata/_custom_type_script = "uid://c4jm48yuuhjth"
 
 [sub_resource type="LabelSettings" id="LabelSettings_e7efo"]
@@ -24,7 +35,7 @@ font_size = 37
 
 [node name="LoadingScreen" type="Node3D" unique_id=1546283903]
 script = ExtResource("1_hmds2")
-data_resource = SubResource("Resource_21oim")
+data_resource = SubResource("Resource_w4f6n")
 
 [node name="Lighting" parent="." unique_id=874770128 instance=ExtResource("2_upvmm")]
 
